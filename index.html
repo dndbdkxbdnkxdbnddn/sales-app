@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B6B5D">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>دفتر المبيعات</title>
+<style>html,body{margin:0}</style>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Readex+Pro:wght@300;400;500;600&display=swap">
+<style>
+/* Layout: one column phone app. Big total up top, quick add form, then today's sales as a list. */
+:root {
+  --bg: #ECEFED;
+  --surface: #FFFFFF;
+  --surface-2: #F3F6F4;
+  --fg: #12201C;
+  --muted: #566861;
+  --line: #D2D9D5;
+  --accent: #0B6B5D;
+  --accent-fg: #FFFFFF;
+  --danger: #B4340E;
+  --font-ui: "Readex Pro", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1412; --surface: #151F1C; --surface-2: #1B2723; --fg: #E6EFEB; --muted: #8DA29A;
+    --line: #27352F; --accent: #3DD6B0; --accent-fg: #03241C; --danger: #FF8A5B; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1412; --surface: #151F1C; --surface-2: #1B2723; --fg: #E6EFEB; --muted: #8DA29A;
+  --line: #27352F; --accent: #3DD6B0; --accent-fg: #03241C; --danger: #FF8A5B; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.6;
+  padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+
+.totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.totals > div { min-width: 0; }
+.lbl { color: var(--muted); font-size: 13px; }
+.big { font-family: var(--font-mono); font-weight: 700; font-variant-numeric: tabular-nums; font-size: clamp(20px, 6vw, 28px); direction: ltr; text-align: right; }
+.big small { font-family: var(--font-ui); font-weight: 400; font-size: 12px; color: var(--muted); margin-inline-start: 4px; }
+.totals .today .big { color: var(--accent); }
+
+form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+form .full { grid-column: 1 / -1; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 500; }
+input[type=text], input[type=number] {
+  font: inherit; color: var(--fg); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 46px; width: 100%;
+}
+input::placeholder { color: var(--muted); }
+button {
+  font: inherit; font-weight: 500; cursor: pointer; border-radius: 10px; min-height: 46px; padding: 10px 16px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.ghost { border: 0; background: transparent; color: var(--muted); min-height: 36px; padding: 4px 10px; font-size: 13px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.list-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.list-head h2 { font-size: 16px; font-weight: 600; margin: 0; }
+ul { list-style: none; margin: 8px 0 0; padding: 0; }
+li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+li:last-child { border-bottom: 0; }
+li .info { flex: 1; min-width: 0; }
+li .nm { font-weight: 500; overflow-wrap: anywhere; }
+li .meta { color: var(--muted); font-size: 12.5px; }
+li .amt { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; direction: ltr; white-space: nowrap; }
+.tag { font-size: 11px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; color: var(--muted); margin-inline-start: 6px; font-weight: 400; }
+li .del { color: var(--danger); min-height: 36px; width: 36px; padding: 0; border: 0; background: transparent; font-size: 20px; line-height: 1; }
+.empty { color: var(--muted); text-align: center; padding: 18px 0 8px; }
+.note { color: var(--muted); font-size: 12.5px; text-align: center; margin: 0; }
+</style>
+
+<div class="app" dir="rtl" lang="ar">
+  <header>
+    <h1>دفتر المبيعات</h1>
+    <p class="sub">سجّل كل بيعة بثواني، وشوف مجموع اليوم.</p>
+  </header>
+
+  <section class="panel totals" aria-label="المجاميع">
+    <div class="today"><div class="lbl">مبيعات اليوم</div><div class="big"><span id="tToday">0</span><small>د.ع</small></div></div>
+    <div><div class="lbl">المجموع الكلي</div><div class="big"><span id="tAll">0</span><small>د.ع</small></div></div>
+  </section>
+
+  <section class="panel" aria-label="بيعة جديدة">
+    <form id="f" autocomplete="off">
+      <div class="field full">
+        <label for="name">المنتج</label>
+        <input type="text" id="name" placeholder="مثلاً: كفر موبايل" required>
+      </div>
+      <div class="field">
+        <label for="price">السعر (دينار)</label>
+        <input type="number" id="price" inputmode="numeric" min="0" step="250" placeholder="5000" required>
+      </div>
+      <div class="field">
+        <label for="qty">العدد</label>
+        <input type="number" id="qty" inputmode="numeric" min="1" step="1" value="1" required>
+      </div>
+      <button class="primary full" type="submit">إضافة البيعة</button>
+    </form>
+  </section>
+
+  <section class="panel" aria-label="قائمة المبيعات">
+    <div class="list-head">
+      <h2>آخر البيعات</h2>
+      <button class="ghost" id="clearEx" type="button" hidden>مسح الأمثلة</button>
+    </div>
+    <ul id="list"></ul>
+    <p class="empty" id="empty" hidden>ما اكو بيعات بعد. أضف أول بيعة من فوق.</p>
+  </section>
+
+  <p class="note">البيانات تنحفظ على جهازك فقط.</p>
+</div>
+
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script>
+<script>
+(function () {
+  var KEY = "sales-book-v1";
+  var mem = null;
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return Math.round(n).toLocaleString("en"); };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return mem;
+  }
+  function save(items) {
+    mem = items;
+    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {}
+  }
+  function dayKey(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function timeText(ts) {
+    var d = new Date(ts);
+    var h = d.getHours(), m = d.getMinutes();
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  }
+
+  var items = load();
+  if (!items) {
+    var now = Date.now();
+    items = [
+      { id: 1, name: "كفر موبايل", price: 5000, qty: 2, ts: now - 3600e3, ex: true },
+      { id: 2, name: "شاحن سريع", price: 12000, qty: 1, ts: now - 7200e3, ex: true },
+      { id: 3, name: "سماعة بلوتوث", price: 25000, qty: 1, ts: now - 10800e3, ex: true }
+    ];
+  }
+
+  function render() {
+    var list = $("list");
+    list.textContent = "";
+    var today = dayKey(Date.now()), tToday = 0, tAll = 0, hasEx = false;
+    items.slice().sort(function (a, b) { return b.ts - a.ts; }).forEach(function (it) {
+      var total = it.price * it.qty;
+      tAll += total;
+      if (dayKey(it.ts) === today) tToday += total;
+      if (it.ex) hasEx = true;
+
+      var li = document.createElement("li");
+      var info = document.createElement("div"); info.className = "info";
+      var nm = document.createElement("div"); nm.className = "nm"; nm.textContent = it.name;
+      if (it.ex) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = "مثال"; nm.appendChild(tg); }
+      var meta = document.createElement("div"); meta.className = "meta";
+      meta.textContent = it.qty + " × " + fmt(it.price) + " · " + (dayKey(it.ts) === today ? "اليوم" : new Date(it.ts).toLocaleDateString("en-GB")) + " " + timeText(it.ts);
+      info.appendChild(nm); info.appendChild(meta);
+      var amt = document.createElement("div"); amt.className = "amt"; amt.textContent = fmt(total);
+      var del = document.createElement("button"); del.type = "button"; del.className = "del";
+      del.setAttribute("aria-label", "حذف " + it.name); del.textContent = "×";
+      del.addEventListener("click", function () {
+        items = items.filter(function (x) { return x.id !== it.id; });
+        save(items); render();
+      });
+      li.appendChild(info); li.appendChild(amt); li.appendChild(del);
+      list.appendChild(li);
+    });
+    $("tToday").textContent = fmt(tToday);
+    $("tAll").textContent = fmt(tAll);
+    $("empty").hidden = items.length > 0;
+    $("clearEx").hidden = !hasEx;
+  }
+
+  $("f").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = $("name").value.trim();
+    var price = parseFloat($("price").value);
+    var qty = parseInt($("qty").value, 10);
+    if (!name || !(price >= 0) || !(qty >= 1)) return;
+    items.push({ id: Date.now(), name: name, price: price, qty: qty, ts: Date.now() });
+    save(items);
+    $("name").value = ""; $("price").value = ""; $("qty").value = "1";
+    $("name").focus();
+    render();
+  });
+
+  $("clearEx").addEventListener("click", function () {
+    items = items.filter(function (x) { return !x.ex; });
+    save(items); render();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
